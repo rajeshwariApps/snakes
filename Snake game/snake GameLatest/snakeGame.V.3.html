@@ -1,0 +1,411 @@
+<html>
+    <body>
+        <!-- define all globals here -->
+    <script>
+    var maximumSpace = 500;
+    var minimumSpace = 20;
+    var powerUpObj;
+    var lowestSpeed = 1;
+    var snakeOneSpeed = 1;
+    var sec = 0;
+    var showPowerUp = false;
+    var controls = new Image()
+    controls.src = "controls.png";
+    var redCube = new Image()
+    redCube.src = "red.png";
+    var greenCube = new Image()
+    greenCube.src = "green.jpg";
+    var blueCube = new Image()
+    blueCube.src = "blue.jpg";
+    var pinkCube = new Image()
+    pinkCube.src = "pink.png";
+    var logo = new Image()
+    logo.src = "logo.png";
+    var snakeImg = new Image()
+    snakeImg.src = "snakeImage.png";
+    var bg = new Image()
+    bg.src = "bgImage.jpg";
+        
+    var startscene = true;
+    var gamescene = false;
+        
+    </script>
+    <script src="blockClass.js"></script> 
+    <script src="snakeClass.js"></script> 
+    <script src="powerUpClass.js"></script> 
+
+    <canvas id="canvas" width="600" height="600" style="border:1px solid #000000"></canvas>
+         
+    <script>
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext("2d");
+
+    document.addEventListener("keydown",keyDownManager);
+    document.addEventListener("keyup", keyUpManager);
+
+    function interSnakeCollision()
+    {
+        for (var index = 0; index < 2; index++)
+        {
+            var snakePrimary = snakePair[index];
+            var snakeSecondary = snakePair[(index + 1) % 2];
+            for(var i = 0 ; i < snakeSecondary.blockcount -1; i ++)
+            {
+                if(collisionDetection(snakePrimary.blockArray[0], snakeSecondary.blockArray[i]))
+                {
+                    snakePrimary.initSnake();
+                    snakePrimary.resetSnakeSize();
+                    snakePrimary.resetSnakespeed();
+                }
+            }
+        }
+    }
+
+    function keyDownManager(e)
+    {
+        for (var index = 0; index < 2; index++)
+        {
+            downManager( snakePair[index], e );
+        }
+        if(e.keyCode == 13)
+        {
+            //gamescene
+           gamescene = true;
+           startscene = false; 
+        }
+    }
+
+    function downManager( snakeObj , e)
+    { 
+        for(var index = 0; index < 4; index++)
+        {
+            if(e.keyCode == snakeObj.inputKeyCode[index])
+            {
+                snakeObj.dirFlag[index] = 1;
+                snakeObj.blockArray[0].RectDirFlag[index] = 1;
+                snakeObj.controlSnake = true;
+            }
+        }
+    }
+
+    function keyUpManager(e)
+    {
+        for (var index = 0; index < 2; index++)
+        {
+            upManager( snakePair[index], e );
+        }
+    }
+
+    function upManager( snakeObj , e)
+    {
+        for(var index = 0; index < 4; index++)
+        {
+            if(e.keyCode == snakeObj.inputKeyCode[index])
+            {
+                snakeObj.dirFlag[index] = 0;
+                snakeObj.blockArray[0].RectDirFlag[index] = 0;
+                snakeObj.controlSnake = false;
+            }
+        }
+    }
+
+    function collisionDetection(obj1, obj2)
+    {
+        if((obj1.xPos >= obj2.xPos && obj1.xPos<= obj2.xPos + obj2.size) && (obj1.yPos >= obj2.yPos && obj1.yPos<= obj2.yPos + obj2.size))
+            {
+                return true;
+            }
+
+        if((obj1.xPos + obj1.size > obj2.xPos && obj1.xPos + obj1.size < obj2.xPos + obj2.size) &&
+        (obj1.yPos > obj2.yPos && obj1.yPos < obj2.yPos + obj2.size))        
+            {
+                return true;
+            }
+         if(((obj1.xPos >= obj2.xPos && obj1.xPos<= obj2.xPos + obj2.size) && (obj1.yPos + obj1.size >= obj2.yPos && obj1.yPos + obj1.size <= obj2.yPos + obj2.size)))
+
+            {
+                return true;
+            }
+
+            if(( (obj1.xPos + obj1.size >= obj2.xPos && obj1.xPos + obj1.size <= obj2.xPos + obj2.size) && (obj1.yPos + obj1.size >= obj2.yPos && obj1.yPos + obj1.size <= obj2.yPos + obj2.size)))
+            {
+                return true;
+            }
+             else
+             {
+                return false;
+             }
+    }
+
+    
+    function watch()
+    {
+        sec += 0.03;
+        if (sec >= 10) 
+        {
+            powerUpObj.showPowerUp = true;
+            initPowerUp();
+            sec = 0;
+        }
+    }
+
+   
+function collisionWithPowerUp()
+ {
+    if(collisionDetection(snakePair[0].blockArray[0], powerUpObj) &&  powerUpObj.showPowerUp)
+    {
+        if( powerUpObj.grow == true)
+        {
+           snakePair[0].grow = true;
+           snakePair[0].growSnake();
+            snakePair[0].score +=1;
+            //console.log(snake.score);
+        }
+
+        if( powerUpObj.shrink == true)
+        {
+           snakePair[0].shrink = true;
+            snakePair[0].shrinkSnake();
+            if(snakePair[0].score > 0)
+                {
+                    snakePair[0].score -=1;
+                }
+            else
+                {
+                     snakePair[0].score=0;
+                    
+                }
+            
+        }
+        if( powerUpObj.accelerate == true)
+        {
+           snakePair[0].speedUp = true;
+            snakePair[0].incSpeed();
+            snakePair[0].score +=1;
+        }
+        if( powerUpObj.deccelerate == true)
+        {
+           snakePair[0].speedDown = true;
+            snakePair[0].decSpeed();
+             if(snakePair[0].score > 0)
+                {
+                    snakePair[0].score -=1;
+                }
+            else
+                {
+                     snakePair[0].score=0;
+                    
+                }
+            
+        }
+        powerUpObj.showPowerUp = false;
+        snakePair[0].moveSnake();
+    }
+        
+    if(collisionDetection(snakePair[1].blockArray[0], powerUpObj) &&  powerUpObj.showPowerUp)
+    {
+        if( powerUpObj.grow == true)
+        {
+           snakePair[1].grow = true;
+           snakePair[1].growSnake();
+            snakePair[1].score +=1;
+            //console.log(snake.score);
+        }
+
+        if( powerUpObj.shrink == true)
+        {
+           snakePair[1].shrink = true;
+            snakePair[1].shrinkSnake();
+            if(snakePair[1].score > 0)
+                {
+                    snakePair[1].score -=1;
+                }
+            else
+                {
+                     snakePair[1].score=0;
+                    
+                }
+            
+        }
+        if( powerUpObj.accelerate == true)
+        {
+           snakePair[1].speedUp = true;
+            snakePair[1].incSpeed();
+            snakePair[1].score +=1;
+        }
+        if( powerUpObj.deccelerate == true)
+        {
+           snakePair[1].speedDown = true;
+            snakePair[1].decSpeed();
+             if(snakePair[1].score > 0)
+                {
+                    snakePair[1].score -=1;
+                }
+            else
+                {
+                     snakePair[1].score=0;
+                    
+                }
+            
+        }
+        powerUpObj.showPowerUp = false;
+        snakePair[1].moveSnake();
+    }
+    
+}
+function printText()
+{
+    ctx.fillStyle = "cyan"
+    ctx.font = "38px Arial";
+    ctx.fillText("SNAKE GAME", 160, 30);
+    
+    ctx.font = "15px Arial";
+    ctx.fillText("Palyer 1 Score: "+ snakePair[0].score, 20,20 );
+    ctx.fillText("Palyer 2 Score: "+ snakePair[1].score, 440,20 );
+   
+    
+}
+        
+function winningScreen()
+{
+    for (var index = 0; index < 2; index++)
+    {
+        var snake = snakePair[index];
+        //if(snake.score <= 10)
+            {
+                 if (snake.score == 10)
+                {
+                    //var message = (index == 0? "Player one Wins" : "Player two Wins");
+                    //ctx.fillText(message, 100,100);
+                    //alert(message);
+                    //break;
+                    //return;
+                    ctx.fillStyle = "white";
+                    ctx.font = "25px Arial";
+                    if(index == 0)
+                        {
+                             ctx.fillText("snake one wins", 100, 200);
+                        }
+                    else
+                        {
+                            ctx.fillText("snake two wins", 100, 200);
+                        }
+                    
+                    
+                }
+            }
+       
+    }
+}
+        
+function printAllText()
+{
+    /*ctx.fillStyle = "white"
+    ctx.font = "29px Pickwick";
+    ctx.fillText("The David's Fantasy World", 400, 50);*/
+    ctx.font = "20px Comic Sans Bold";
+    ctx.fillStyle = "red";
+    ctx.fillText("Use Up-arrow to Move Up", 50, 280);
+    
+    ctx.fillText("Use right-arrow to Move Right", 50, 300);
+    ctx.font = "20px Comic Sans";
+    ctx.fillText("Use Left-arrow to Move Left", 50, 320);
+    ctx.font = "20px Comic Sans";
+    ctx.fillText("Use Down-arrow to Move Down", 50, 340);
+    ctx.fillStyle = "cyan";
+    ctx.font = "25px calibri ";
+    ctx.fillText("Press ENTER to play the game", 160, 490);
+    ctx.fillStyle = "cyan";
+    ctx.font = "15px calibri ";
+    ctx.fillText("Power-Up strategies: ", 410, 10);
+    ctx.font = "20px calibri ";
+    ctx.fillStyle = "blue";
+    ctx.fillText("Speed UP snake", 430, 60);
+    ctx.fillStyle = "green";
+    ctx.fillText("Grow Snake", 430, 100);
+    ctx.fillStyle = "red";
+    ctx.fillText("Shrinks snake", 430, 130);
+    ctx.fillStyle = "pink";
+    ctx.fillText("Speed DOWN snake", 430, 160);
+    
+    
+}
+
+
+
+    function gameLoop()
+    {
+        if(startscene)
+        {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            //ctx.fillStyle = "black";
+            //ctx.fillRect(0,0, canvas.width, canvas.height);
+            ctx.drawImage(bg,0,0, canvas.width, canvas.height);
+            ctx.drawImage(controls,300,250, 70, 70);
+            
+            
+           
+            
+            printAllText();
+            ctx.drawImage(snakeImg,20,450, 150, 150);
+            ctx.drawImage(logo,50,10, 350, 250);
+            
+            ctx.drawImage(blueCube,400,40, 20, 20);
+            ctx.drawImage(greenCube,400,80, 20, 20);
+            ctx.drawImage(redCube,400,110, 20, 20);
+            ctx.drawImage(pinkCube,400,140, 20, 20);
+    
+        }
+        
+        
+        
+        if(gamescene)
+        {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            ctx.fillStyle = "black";
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+            printText();
+            if(powerUpObj.showPowerUp)
+            {
+                renderPowerUp(ctx); 
+            }
+            for (var index = 0; index < 2; index++)
+            {
+                var snake = snakePair[index];
+                //var snake = snakePair[0];
+                snake.wallCollision();
+                snake.moveSnake();
+                snake.drawSnake(ctx);
+                snake.selfCollision();
+
+                winningScreen();
+
+            }
+            collisionWithPowerUp();
+            interSnakeCollision();
+            watch();
+            
+        }
+    }
+       
+       
+
+
+    var snakePair;
+    function initSnakes()
+    {
+        var snakeOne = new c_snakes(100,200,"yellow", 8 , [37,38,39,40]);
+        var snakeTwo = new c_snakes(250,260,"cyan", 8, [65,87,68,83]);        
+        snakePair = [snakeOne, snakeTwo];
+        for (var index = 0; index < 2; index++)
+        {
+            snakePair[index].initSnake();    
+        }
+    }
+
+    initSnakes();
+    initPowerUp();
+    setInterval(gameLoop, 33.33);                                           
+        </script>
+    </body>
+</html>
